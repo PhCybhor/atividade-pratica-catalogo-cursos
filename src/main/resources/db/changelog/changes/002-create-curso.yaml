@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-01-create-curso
+      author: catalogocursos
+      comment: Cria a tabela de cursos vinculada a um instrutor.
+      changes:
+        - createTable:
+            tableName: curso
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_curso
+                    nullable: false
+              - column:
+                  name: titulo
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: carga_horaria
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+              - column:
+                  name: nivel
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: instrutor_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: curso
+
+  - changeSet:
+      id: 002-02-fk-curso-instrutor
+      author: catalogocursos
+      comment: Adiciona a chave estrangeira obrigatória curso -> instrutor.
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: curso
+            baseColumnNames: instrutor_id
+            referencedTableName: instrutor
+            referencedColumnNames: id
+            constraintName: fk_curso_instrutor
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: curso
+            constraintName: fk_curso_instrutor
+
+  - changeSet:
+      id: 002-03-check-nivel-curso
+      author: catalogocursos
+      comment: Restringe o nível aos valores do enum Java.
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE curso
+              ADD CONSTRAINT ck_curso_nivel
+              CHECK (nivel IN ('INICIANTE', 'INTERMEDIARIO', 'AVANCADO'))
+      rollback:
+        - sql:
+            sql: >
+              ALTER TABLE curso
+              DROP CONSTRAINT ck_curso_nivel
